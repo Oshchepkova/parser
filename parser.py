@@ -12,30 +12,28 @@ def parse_file(path: str) -> Dict[str, str]:
     key5:       value5
     key6:       value6
     """
-
+    result = {}
     with open(path, "r") as input_file:
-        data = input_file.read()
-    chunk_data = data.split("\n\n")
-    for document in chunk_data:
-        result = {}
-        blocs = document.split("\n")
-        for record in blocs:
-            if not record.startswith("#"):
-                match = re.search(r"^\w*-*\w*(?=:)", record)
+        for (line) in input_file:  # reading a file line by line without loading it into memory
+            if not line.startswith("#"):
+                if line == "\n":
+                    if result:
+                        yield result
+                        result = {}
+                        continue
+                    else:
+                        continue
+                match = re.search(r"^\w*-*\w*(?=:)", line)
                 if match:
-                    key, value = re.split(r":\s*(?=[\w*])", record)
+                    key, value = re.split(r":\s*(?=[\w*])", line)
                     if key in result.keys():
-                        result[key] += "\n " + value  # for duplicate keys
+                        result[key] += value  # for duplicate keys
                     else:
                         result[key] = value
                 else:
                     last_key = list(result)[-1]
-                    record = record.replace(
-                        "                ", "\n"
-                    )  # for multiline records
-                    result[last_key] += record
-        if result:
-            yield result
+                    line = line.replace("                ", "")  # for multiline records
+                    result[last_key] += line
 
 
 def load_data(path: str) -> None:
